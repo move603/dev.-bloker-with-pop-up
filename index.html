@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <title>Developer Mode Blocker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            max-width: 90%;
+            width: 500px;
+            transition: transform 0.3s ease;
+        }
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        p {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .status-container {
+            margin: 25px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            background: rgba(46, 204, 113, 0.15);
+            border: 2px solid #2ecc71;
+            color: #27ae60;
+            transition: all 0.3s ease;
+        }
+        .status-indicator.alert {
+            background: rgba(231, 76, 60, 0.15);
+            border-color: #e74c3c;
+            color: #c0392b;
+        }
+        .device-info {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #95a5a6;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            border-radius: 10px;
+            max-width: 90%;
+            width: 400px;
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .popup h2 {
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        .popup button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background 0.2s;
+            margin-top: 15px;
+        }
+        .popup button:hover {
+            background: #c0392b;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+            padding: 0 15px;
+        }
+        .feature-list li {
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Developer Mode Blocker</h1>
+        <p>This page blocks access to developer tools and protects source code. Try opening DevTools or using shortcuts.</p>
+        
+        <div class="status-container">
+            <div id="statusIndicator" class="status-indicator">
+                System Status: Normal
+            </div>
+            <div id="deviceInfo" class="device-info">Device: Desktop</div>
+        </div>
+        
+        <div class="feature-list">
+            <h3>Protection Features:</h3>
+            <ul>
+                <li>✓ Blocks right-click context menu</li>
+                <li>✓ Disables DevTools shortcuts (F12, Ctrl+Shift+I, etc.)</li>
+                <li>✓ Prevents copy, paste, and text selection</li>
+                <li>✓ Detects and blocks DevTools opening</li>
+                <li>✓ Mobile-friendly with pinch-to-zoom support</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="blockPopup">
+        <h2>Access Blocked!</h2>
+        <p>Developer tools or unauthorized actions detected. This is not allowed.</p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
+    <script>
+        // Obfuscated code with enhanced protection
+        eval(atob('Y2xhc3MgRGV2VG9vbHNCbG9ja2VyIHsNCiAgICBjb25zdHJ1Y3RvcihyZWRpcmVjdFVybCA9ICdodHRwczovL2V4YW1wbGUuY29tJywgdGhyZXNob2xkID0gMTYwKSB7DQogICAgICAgIHRoaXMuZGV2VG9vbHNPcGVuID0gZmFsc2U7DQogICAgICAgIHRoaXMucmVkaXJlY3RVcmwgPSByZWRpcmVjdFVybDsNCiAgICAgICAgdGhpcy50aHJlc2hvbGQgPSB0aHJlc2hvbGQ7DQogICAgICAgIHRoaXMucG9wdXBFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2Jsb2NrUG9wdXAnKTsNCiAgICAgICAgdGhpcy5zdGF0dXNFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3N0YXR1c0luZGljYXRvcicpOw0KICAgICAgICB0aGlzLmRldmljZUVsZW1lbnQgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZGV2aWNlSW5mbycpOw0KICAgICAgICB0aGlzLmlzTW9iaWxlID0gL0FuZHJvaWR8d2ViT1N8aVBob25lGlUGUGFkfGlQb2R8QmxhY2tCZXJyeXxJRU1vYmlsZXxPcGVyYSBNaW5pL2kudGVzdChuYXZpZ2F0b3IudXNlckFnZW50KTsNCiAgICAgICAgdGhpcy52aXN1YWxWaWV3cG9ydCA9IHdpbmRvdy52aXN1YWxWaWV3cG9ydDsNCiAgICAgICAgdGhpcy5pbml0aWFsV2lkdGggPSB0aGlzLnZpc3VhbFZpZXdwb3J0ID8gdGhpcy52aXN1YWxWaWV3cG9ydC53aWR0aCA6IHdpbmRvdy5pbm5lcldpZHRoOw0KICAgICAgICB0aGlzLmluaXRpYWxIZWlnaHQgPSB0aGlzLnZpc3VhbFZpZXdwb3J0ID8gdGhpcy52aXN1YWxWaWV3cG9ydC5oZWlnaHQgOiB3aW5kb3cuaW5uZXJIZWlnaHQ7DQogICAgICAgIHRoaXMuaW5pdGlhbFNjYWxlID0gdGhpcy52aXN1YWxWaWV3cG9ydCA/IHRoaXMudmlzdWFsVmlld3BvcnQuc2NhbGUgOiAxOw0KDQogICAgICAgIGNvbnNvbGUuYXNzZXJ0KHRoaXMuaW5pdGlhbFdpZHRoID4gMCwgJ0luaXRpYWwgd2lkdGggbXVzdCBiZSBwb3NpdGl2ZScpOw0KICAgICAgICBjb25zb2xlLmFzc2VydCh0aGlzLmluaXRpYWxIZWlnaHQgPiAwLCAnSW5pdGlhbCBoZWlnaHQgbXVzdCBiZSBwb3NpdGl2ZScpOw0KICAgICAgICBjb25zb2xlLmFzc2VydCh0eXBlb2YgdGhpcy5yZWRpcmVjdFVybCA9PT0gJ3N0cmluZycsICdSZWRpcmVjdCBVUkwgbXVzdCBiZSBhIHN0cmluZycpOw0KICAgICAgICBjb25zb2xlLmFzc2VydCh0aGlzLnRocmVzaG9sZCA+IDAsICdUaHJlc2hvbGQgbXVzdCBiZSBwb3NpdGl2ZScpOw0KDQogICAgICAgIHRoaXMudXBkYXRlRGV2aWNlSW5mbygpOw0KICAgICAgICB0aGlzLnVwZGF0ZVN0YXR1cygnTm9ybWFsJyk7DQogICAgICAgIGNvbnNvbGUubG9nKCdEZXZUb29sc0Jsb2NrZXIgaW5pdGlhbGl6ZWQ6Jywgew0KICAgICAgICAgICAgaXNNb2JpbGU6IHRoaXMuaXNNb2JpbGUsDQogICAgICAgICAgICBpbml0aWFsV2lkdGg6IHRoaXMuaW5pdGlhbFdpZHRoLA0KICAgICAgICAgICAgaW5pdGlhbEhlaWdodDogdGhpcy5pbml0aWFsSGVpZ2h0LA0KICAgICAgICAgICAgaW5pdGlhbFNjYWxlOiB0aGlzLmluaXRpYWxTY2FsZQ0KICAgICAgICB9KTsNCg0KICAgICAgICB0aGlzLmluaXQoKTsNCiAgICB9DQoNCiAgICBpbml0KCkgew0KICAgICAgICB0aGlzLmJpbmRFdmVudHMoKTsNCiAgICAgICAgdGhpcy5zdGFydE1vbml0b3JpbmcoKTsNCiAgICB9DQoNCiAgICBiaW5kRXZlbnRzKCkgew0KICAgICAgICAvLyBCbG9jayBEZXZUb29scyBzaG9ydGN1dHMNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigna2V5ZG93bicsIChlKSA9PiB0aGlzLmhhbmRsZUtleURvd24oZSkpOw0KDQogICAgICAgIC8vIEJsb2NrIHJpZ2h0LWNsaWNrDQogICAgICAgIGRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ2NvbnRleHRtZW51JywgKGUpID0+IHRoaXMuaGFuZGxlQ29udGV4dE1lbnUoZSkpOw0KDQogICAgICAgIC8vIERldGVjdCB3aW5kb3cgcmVzaXplDQogICAgICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdyZXNpemUnLCAoKSA9PiB0aGlzLmhhbmRsZVJlc2l6ZSgpKTsNCg0KICAgICAgICAvLyBEZXRlY3Qgb3JpZW50YXRpb24gY2hhbmdlDQogICAgICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdvcmllbnRhdGlvbmNoYW5nZScsICgpID0+IHRoaXMuaGFuZGxlT3JpZW50YXRpb25DaGFuZ2UoKSk7DQoNCiAgICAgICAgLy8gVmlzaWJpbGl0eSBjaGFuZ2UNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigidmlzaWJpbGl0eWNoYW5nZSIsICgpID0+IHRoaXMuaGFuZGxlVmlzaWJpbGl0eUNoYW5nZSgpKTsNCg0KICAgICAgICAvLyBCbG9jayBjb3B5LCBwYXN0ZSwgc2VsZWN0c3RhcnQsIGRyYWdzdGFydA0KICAgICAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdjb3B5JywgKGUpID0+IHsNCiAgICAgICAgICAgIGUucHJldmVudERlZmF1bHQoKTsNCiAgICAgICAgICAgIHRoaXMuc2hvd1BvcHVwKCk7DQogICAgICAgIH0pOw0KICAgICAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdwYXN0ZScsIChlKSA9PiB7DQogICAgICAgICAgICBlLnByZXZlbnREZWZhdWx0KCk7DQogICAgICAgICAgICB0aGlzLnNob3dQb3B1cCgpOw0KICAgICAgICB9KTsNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignc2VsZWN0c3RhcnQnLCAoZSkgPT4gZS5wcmV2ZW50RGVmYXVsdCgpKTsNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignZHJhZ3N0YXJ0JywgKGUpID0+IGUucHJldmVudERlZmF1bHQoKSk7DQoNCiAgICAgICAgLy8gSWYgdmlzdWFsVmlld3BvcnQgaXMgYXZhaWxhYmxlLCBsaXN0ZW4gdG8gaXRzIHJlc2l6ZSBldmVudA0KICAgICAgICBpZiAodGhpcy52aXN1YWxWaWV3cG9ydCkgew0KICAgICAgICAgICAgdGhpcy52aXN1YWxWaWV3cG9ydC5hZGRFdmVudExpc3RlbmVyKCdyZXNpemUnLCAoKSA9PiB0aGlzLmhhbmRsZVZpc3VhbFZpZXdwb3J0UmVzaXplKCkpOw0KICAgICAgICB9DQogICAgfQ0KDQogICAgc3RhcnRNb25pdG9yaW5nKCkgew0KICAgICAgICBzZXRJbnRlcnZhbCgoKSA9PiB0aGlzLmNoZWNrRGV2VG9vbHMoKSwgNTAwKTsNCiAgICB9DQoNCiAgICBoYW5kbGVLZXlEb3duKGUpIHsNCiAgICAgICAgY29uc3QgaXNCbG9ja2VkS2V5ID0gZS5rZXkgPT09ICdGMTInIHx8DQogICAgICAgICAgICAoZS5jdHJsS2V5ICYmIGUuc2hpZnRLZXkgJiYgWydJJywgJ0onLCAnQyddLmluY2x1ZGVzKGUua2V5LnRvVXBwZXJDYXNlKCkpKSB8fA0KICAgICAgICAgICAgKGUuY3RybEtleSAmJiBlLmtleS50b1VwcGVyQ2FzZSgpID09PSAnVScpOw0KDQogICAgICAgIGlmIChpc0Jsb2NrZWRLZXkpIHsNCiAgICAgICAgICAgIGUucHJldmVudERlZmF1bHQoKTsNCiAgICAgICAgICAgIHRoaXMuc2hvd1BvcHVwKCk7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBoYW5kbGVDb250ZXh0TWVudShlKSB7DQogICAgICAgIGUucHJldmVudERlZmF1bHQoKTsNCiAgICAgICAgdGhpcy5zaG93UG9wdXAoKTsNCiAgICB9DQoNCiAgICBoYW5kbGVSZXNpemUoKSB7DQogICAgICAgIGNvbnN0IGN1cnJlbnRXaWR0aCA9IHdpbmRvdy5pbm5lcldpZHRoOw0KICAgICAgICBjb25zdCBjdXJyZW50SGVpZ2h0ID0gd2luZG93LmlubmVySGVpZ2h0Ow0KICAgICAgICBjb25zdCB3aWR0aENoYW5nZSA9IE1hdGguYWJzKGN1cnJlbnRXaWR0aCAtIHRoaXMuaW5pdGlhbFdpZHRoKTsNCiAgICAgICAgY29uc3QgaGVpZ2h0Q2hhbmdlID0gTWF0aC5hYnMoY3VycmVudEhlaWdodCAtIHRoaXMuaW5pdGlhbEhlaWdodCk7DQoNCiAgICAgICAgLy8gT25seSByZWRpcmVjdCBpZiB0aGUgY2hhbmdlIGlzIHNpZ25pZmljYW50IChub3QganVzdCB6b29tIG9yIHNjcm9sbCkNCiAgICAgICAgaWYgKHdpZHRoQ2hhbmdlID4gMjAwIHx8IGhlaWdodENoYW5nZSA+IDIwMCkgew0KICAgICAgICAgICAgdGhpcy5yZWRpcmVjdCgpOw0KICAgICAgICB9DQogICAgfQ0KDQogICAgaGFuZGxlVmlzdWFsVmlld3BvcnRSZXNpemUoKSB7DQogICAgICAgIC8vIFVwZGF0ZSBpbml0aWFsIHNjYWxlIG9uIHpvb20gY2hhbmdlDQogICAgICAgIGlmICh0aGlzLnZpc3VhbFZpZXdwb3J0KSB7DQogICAgICAgICAgICB0aGlzLmluaXRpYWxTY2FsZSA9IHRoaXMudmlzdWFsVmlld3BvcnQuc2NhbGU7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBoYW5kbGVPcmllbnRhdGlvbkNoYW5nZSgpIHsNCiAgICAgICAgLy8gVXBkYXRlIGluaXRpYWwgZGltZW5zaW9ucyBvbiBvcmllbnRhdGlvbiBjaGFuZ2UNCiAgICAgICAgaWYgKHRoaXMudmlzdWFsVmlld3BvcnQpIHsNCiAgICAgICAgICAgIHRoaXMuaW5pdGlhbFdpZHRoID0gdGhpcy52aXN1YWxWaWV3cG9ydC53aWR0aDsNCiAgICAgICAgICAgIHRoaXMuaW5pdGlhbEhlaWdodCA9IHRoaXMudmlzdWFsVmlld3BvcnQuaGVpZ2h0Ow0KICAgICAgICB9IGVsc2Ugew0KICAgICAgICAgICAgdGhpcy5pbml0aWFsV2lkdGggPSB3aW5kb3cuaW5uZXJXaWR0aDsNCiAgICAgICAgICAgIHRoaXMuaW5pdGlhbEhlaWdodCA9IHdpbmRvdy5pbm5lckhlaWdodDsNCiAgICAgICAgfQ0KICAgIH0NCg0KICAgIGhhbmRsZVZpc2liaWxpdHlDaGFuZ2UoKSB7DQogICAgICAgIGlmICghZG9jdW1lbnQuaGlkZGVuKSB7DQogICAgICAgICAgICB0aGlzLmNoZWNrRGV2VG9vbHNPbkZvY3VzKCk7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBjaGVja0RldlRvb2xzKCkgew0KICAgICAgICB0cnkgew0KICAgICAgICAgICAgY29uc3Qgd2lkdGhEaWZmID0gd2luZG93Lm91dGVyV2lkdGggLSB3aW5kb3cuaW5uZXJXaWR0aDsNCiAgICAgICAgICAgIGNvbnN0IGhlaWdodERpZmYgPSB3aW5kb3cub3V0ZXJIZWlnaHQgLSB3aW5kb3cuaW5uZXJIZWlnaHQ7DQoNCiAgICAgICAgICAgIGlmICgod2lkdGhEaWZmID4gdGhpcy50aHJlc2hvbGQgfHwgaGVpZ2h0RGlmZiA+IHRoaXMudGhyZXNob2xkKSAmJiAhdGhpcy5kZXZUb29sc09wZW4pIHsNCiAgICAgICAgICAgICAgICB0aGlzLmRldlRvb2xzT3BlbiA9IHRydWU7DQogICAgICAgICAgICAgICAgdGhpcy5yZWRpcmVjdCgpOw0KICAgICAgICAgICAgfSBlbHNlIGlmICh3aWR0aERpZmYgPD0gdGhpcy50aHJlc2hvbGQgJiYgaGVpZ2h0RGlmZiA8PSB0aGlzLnRocmVzaG9sZCAmJiB0aGlzLmRldlRvb2xzT3Blbikgew0KICAgICAgICAgICAgICAgIHRoaXMuZGV2VG9vbHNPcGVuID0gZmFsc2U7DQogICAgICAgICAgICB9DQogICAgICAgIH0gY2F0Y2ggKGVycm9yKSB7DQogICAgICAgICAgICBjb25zb2xlLmVycm9yKCdFcnJvciBpbiBEZXZUb29scyBjaGVjazonLCBlcnJvcik7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBjaGVja0RldlRvb2xzT25Gb2N1cygpIHsNCiAgICAgICAgdHJ5IHsNCiAgICAgICAgICAgIGNvbnN0IHdpZHRoRGlmZiA9IHdpbmRvdy5vdXRlcldpZHRoIC0gd2luZG93LmlubmVyV2lkdGg7DQogICAgICAgICAgICBjb25zdCBoZWlnaHREaWZmID0gd2luZG93Lm91dGVySGVpZ2h0IC0gd2luZG93LmlubmVySGVpZ2h0Ow0KICAgICAgICAgICAgaWYgKHdpZHRoRGlmZiA+IHRoaXMudGhyZXNob2xkIHx8IGhlaWdodERpZmYgPiB0aGlzLnRocmVzaG9sZCkgew0KICAgICAgICAgICAgICAgIHRoaXMucmVkaXJlY3QoKTsNCiAgICAgICAgICAgIH0NCiAgICAgICAgfSBjYXRjaCAoZXJyb3IpIHsNCiAgICAgICAgICAgIGNvbnNvbGUuZXJyb3IoJ0Vycm9yIGluIHZpc2liaWxpdHkgY2hlY2s6JywgZXJyb3IpOw0KICAgICAgICB9DQogICAgfQ0KDQogICAgc2hvd1BvcHVwKCkgew0KICAgICAgICBpZiAodGhpcy5zdGF0dXNFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLnN0YXR1c0VsZW1lbnQudGV4dENvbnRlbnQgPSAnU3lzdGVtIFN0YXR1czogQWN0aW9uIEJsb2NrZWQnOw0KICAgICAgICAgICAgdGhpcy5zdGF0dXNFbGVtZW50LmNsYXNzTGlzdC5hZGQoJ2FsZXJ0Jyk7DQogICAgICAgIH0NCiAgICAgICAgaWYgKHRoaXMucG9wdXBFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLnBvcHVwRWxlbWVudC5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsNCiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdmVybGF5Jykuc3R5bGUuZGlzcGxheSA9ICdibG9jayc7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBjbG9zZVBvcHVwKCkgew0KICAgICAgICBpZiAodGhpcy5zdGF0dXNFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLnN0YXR1c0VsZW1lbnQudGV4dENvbnRlbnQgPSAnU3lzdGVtIFN0YXR1czogTm9ybWFsJzsNCiAgICAgICAgICAgIHRoaXMuc3RhdHVzRWxlbWVudC5jbGFzc0xpc3QucmVtb3ZlKCdhbGVydCcpOw0KICAgICAgICB9DQogICAgICAgIGlmICh0aGlzLnBvcHVwRWxlbWVudCkgew0KICAgICAgICAgICAgdGhpcy5wb3B1cEVsZW1lbnQuc3R5bGUuZGlzcGxheSA9ICdub25lJzsNCiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdmVybGF5Jykuc3R5bGUuZGlzcGxheSA9ICdub25lJzsNCiAgICAgICAgfQ0KICAgIH0NCg0KICAgIHVwZGF0ZVN0YXR1cyhzdGF0dXMpIHsNCiAgICAgICAgaWYgKHRoaXMuc3RhdHVzRWxlbWVudCkgew0KICAgICAgICAgICAgdGhpcy5zdGF0dXNFbGVtZW50LnRleHRDb250ZW50ID0gJ1N5c3RlbSBTdGF0dXM6ICcgKyBzdGF0dXM7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICB1cGRhdGVEZXZpY2VJbmZvKCkgew0KICAgICAgICBpZiAodGhpcy5kZXZpY2VFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLmRldmljZUVsZW1lbnQudGV4dENvbnRlbnQgPSAnRGV2aWNlOiAnICsgKHRoaXMuaXNNb2JpbGUgPyAnTW9iaWxlJyA6ICdEZXNrdG9wJyk7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICByZWRpcmVjdCgpIHsNCiAgICAgICAgY29uc29sZS5sb2coJ1JlZGlyZWN0aW5nIGR1ZSB0byBkZXRlY3RlZCBhY3Rpdml0eScpOw0KICAgICAgICB0cnkgew0KICAgICAgICAgICAgd2luZG93LmxvY2F0aW9uLmhyZWYgPSB0aGlzLnJlZGlyZWN0VXJsOw0KICAgICAgICB9IGNhdGNoIChlcnJvcikgew0KICAgICAgICAgICAgY29uc29sZS5lcnJvcignRXJyb3IgcmVkaXJlY3Rpbmc6JywgZXJyb3IpOw0KICAgICAgICB9DQogICAgfQ0KfQ0KDQpjb25zdCBibG9ja2VyID0gbmV3IERldlRvb2xzQmxvY2tlcigpOw0Kd2luZG93LmNsb3NlUG9wdXAgPSAoKSA9PiBibG9ja2VyLmNsb3NlUG9wdXAoKTsNCg0KLy8gRGVidWdnZXIgdHJhcCB0byBzbG93IGRvd24gZGV2IHRvb2xzDQpsZXQgZGV2dG9vbHNPcGVuID0gZmFsc2U7DQpjb25zdCBjaGVja0RldlRvb2xzVGltaW5nID0gKCkgPT4gew0KICAgIGNvbnN0IHN0YXJ0ID0gRGF0ZS5ub3coKTsNCiAgICBkZWJ1Z2dlcjsNCiAgICBjb25zdCBlbmQgPSBEYXRlLm5vdygpOw0KICAgIGNvbnN0IGRpZmYgPSBlbmQgLSBzdGFydDsNCiAgICBpZiAoZGlmZiA+IDEwMCAmJiAhZGV2dG9vbHNPcGVuKSB7DQogICAgICAgIGRldnRvb2xzT3BlbiA9IHRydWU7DQogICAgICAgIGJsb2NrZXIucmVkaXJlY3QoKTsNCiAgICB9DQp9Ow0Kc2V0SW50ZXJ2YWwoY2hlY2tEZXdUb29sc1RpbWluZywgMTAwMCk7'));
+    </script>
+</body>
+</html>
