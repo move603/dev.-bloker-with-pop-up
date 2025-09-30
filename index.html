@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="description" content="Developer Mode Blocker - Advanced protection against unauthorized access">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
     <title>Developer Mode Blocker</title>
     <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -15,36 +21,73 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
+            touch-action: manipulation;
+            overflow: hidden;
+            position: relative;
         }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
         .container {
             text-align: center;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
             max-width: 90%;
-            width: 500px;
-            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+        
         .container:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
         }
+        
         h1 {
             color: #2c3e50;
-            margin-bottom: 10px;
-            font-weight: 600;
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 2.2rem;
+            background: linear-gradient(45deg, #3498db, #2c3e50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
+        
         p {
             color: #7f8c8d;
             line-height: 1.6;
             margin-bottom: 20px;
+            font-size: 1.1rem;
         }
+        
         .status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             margin: 25px 0;
+            gap: 15px;
         }
-        .status-indicator {
-            display: inline-block;
+        
+        #statusIndicator {
+            display: inline-flex;
+            align-items: center;
             padding: 12px 25px;
             border-radius: 50px;
             font-weight: bold;
@@ -52,17 +95,52 @@
             border: 2px solid #2ecc71;
             color: #27ae60;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(46, 204, 113, 0.1);
         }
-        .status-indicator.alert {
+        
+        #statusIndicator.warning {
             background: rgba(231, 76, 60, 0.15);
             border-color: #e74c3c;
             color: #c0392b;
+            box-shadow: 0 4px 6px rgba(231, 76, 60, 0.1);
         }
-        .device-info {
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: #95a5a6;
+        
+        #deviceInfo {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            color: #2980b9;
+            font-weight: 500;
         }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .feature {
+            background: rgba(241, 242, 246, 0.7);
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature i {
+            color: #3498db;
+            font-weight: bold;
+        }
+        
         .popup {
             display: none;
             position: fixed;
@@ -70,82 +148,112 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: #fff;
-            padding: 25px;
+            padding: 30px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            z-index: 10000;
-            border-radius: 10px;
+            z-index: 9999;
+            border-radius: 16px;
+            text-align: center;
             max-width: 90%;
             width: 400px;
-            animation: popIn 0.3s ease;
+            animation: popupAppear 0.3s ease-out;
+            border-top: 5px solid #e74c3c;
         }
-        @keyframes popIn {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        
+        @keyframes popupAppear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
+        
         .popup h2 {
             color: #e74c3c;
             margin-top: 0;
+            font-size: 1.5rem;
         }
+        
+        .popup p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        
         .popup button {
-            background: #e74c3c;
+            background: linear-gradient(to right, #e74c3c, #c0392b);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 25px;
             cursor: pointer;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: background 0.2s;
-            margin-top: 15px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
         }
+        
         .popup button:hover {
-            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
         }
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
+        
+        .footer {
+            margin-top: 25px;
+            color: #95a5a6;
+            font-size: 0.85rem;
         }
-        .feature-list {
-            text-align: left;
-            margin: 20px 0;
-            padding: 0 15px;
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                max-width: 95%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .features {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .feature {
+                width: 100%;
+                justify-content: center;
+            }
         }
-        .feature-list li {
-            margin-bottom: 8px;
-            color: #34495e;
+        
+        /* Prevent text selection */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
-<body>
+<body class="no-select">
     <div class="container">
         <h1>Developer Mode Blocker</h1>
-        <p>This page blocks access to developer tools and protects source code. Try opening DevTools or using shortcuts.</p>
+        <p>This page blocks access to developer tools and protects source code. Try opening DevTools or resizing the window.</p>
         
         <div class="status-container">
-            <div id="statusIndicator" class="status-indicator">
-                System Status: Normal
+            <div id="statusIndicator">
+                <i>✓</i> System Status: Normal
             </div>
-            <div id="deviceInfo" class="device-info">Device: Desktop</div>
+            <div id="deviceInfo">
+                <i>📱</i> Device: Desktop
+            </div>
         </div>
         
-        <div class="feature-list">
-            <h3>Protection Features:</h3>
-            <ul>
-                <li>✓ Blocks right-click context menu</li>
-                <li>✓ Disables DevTools shortcuts (F12, Ctrl+Shift+I, etc.)</li>
-                <li>✓ Prevents copy, paste, and text selection</li>
-                <li>✓ Detects and blocks DevTools opening</li>
-                <li>✓ Mobile-friendly with pinch-to-zoom support</li>
-            </ul>
+        <div class="features">
+            <div class="feature"><i>✓</i> Pinch-to-Zoom Enabled</div>
+            <div class="feature"><i>✓</i> Source Code Protection</div>
+            <div class="feature"><i>✓</i> DevTools Detection</div>
+            <div class="feature"><i>✓</i> Mobile Optimized</div>
         </div>
+        
+        <p class="footer">Advanced protection system active. All unauthorized actions are monitored and blocked.</p>
     </div>
 
-    <div class="overlay" id="overlay"></div>
     <div class="popup" id="blockPopup">
         <h2>Access Blocked!</h2>
         <p>Developer tools or unauthorized actions detected. This is not allowed.</p>
@@ -153,8 +261,302 @@
     </div>
 
     <script>
-        // Obfuscated code with enhanced protection
-        eval(atob('Y2xhc3MgRGV2VG9vbHNCbG9ja2VyIHsNCiAgICBjb25zdHJ1Y3RvcihyZWRpcmVjdFVybCA9ICdodHRwczovL2V4YW1wbGUuY29tJywgdGhyZXNob2xkID0gMTYwKSB7DQogICAgICAgIHRoaXMuZGV2VG9vbHNPcGVuID0gZmFsc2U7DQogICAgICAgIHRoaXMucmVkaXJlY3RVcmwgPSByZWRpcmVjdFVybDsNCiAgICAgICAgdGhpcy50aHJlc2hvbGQgPSB0aHJlc2hvbGQ7DQogICAgICAgIHRoaXMucG9wdXBFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2Jsb2NrUG9wdXAnKTsNCiAgICAgICAgdGhpcy5zdGF0dXNFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3N0YXR1c0luZGljYXRvcicpOw0KICAgICAgICB0aGlzLmRldmljZUVsZW1lbnQgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZGV2aWNlSW5mbycpOw0KICAgICAgICB0aGlzLmlzTW9iaWxlID0gL0FuZHJvaWR8d2ViT1N8aVBob25lGlUGUGFkfGlQb2R8QmxhY2tCZXJyeXxJRU1vYmlsZXxPcGVyYSBNaW5pL2kudGVzdChuYXZpZ2F0b3IudXNlckFnZW50KTsNCiAgICAgICAgdGhpcy52aXN1YWxWaWV3cG9ydCA9IHdpbmRvdy52aXN1YWxWaWV3cG9ydDsNCiAgICAgICAgdGhpcy5pbml0aWFsV2lkdGggPSB0aGlzLnZpc3VhbFZpZXdwb3J0ID8gdGhpcy52aXN1YWxWaWV3cG9ydC53aWR0aCA6IHdpbmRvdy5pbm5lcldpZHRoOw0KICAgICAgICB0aGlzLmluaXRpYWxIZWlnaHQgPSB0aGlzLnZpc3VhbFZpZXdwb3J0ID8gdGhpcy52aXN1YWxWaWV3cG9ydC5oZWlnaHQgOiB3aW5kb3cuaW5uZXJIZWlnaHQ7DQogICAgICAgIHRoaXMuaW5pdGlhbFNjYWxlID0gdGhpcy52aXN1YWxWaWV3cG9ydCA/IHRoaXMudmlzdWFsVmlld3BvcnQuc2NhbGUgOiAxOw0KDQogICAgICAgIGNvbnNvbGUuYXNzZXJ0KHRoaXMuaW5pdGlhbFdpZHRoID4gMCwgJ0luaXRpYWwgd2lkdGggbXVzdCBiZSBwb3NpdGl2ZScpOw0KICAgICAgICBjb25zb2xlLmFzc2VydCh0aGlzLmluaXRpYWxIZWlnaHQgPiAwLCAnSW5pdGlhbCBoZWlnaHQgbXVzdCBiZSBwb3NpdGl2ZScpOw0KICAgICAgICBjb25zb2xlLmFzc2VydCh0eXBlb2YgdGhpcy5yZWRpcmVjdFVybCA9PT0gJ3N0cmluZycsICdSZWRpcmVjdCBVUkwgbXVzdCBiZSBhIHN0cmluZycpOw0KICAgICAgICBjb25zb2xlLmFzc2VydCh0aGlzLnRocmVzaG9sZCA+IDAsICdUaHJlc2hvbGQgbXVzdCBiZSBwb3NpdGl2ZScpOw0KDQogICAgICAgIHRoaXMudXBkYXRlRGV2aWNlSW5mbygpOw0KICAgICAgICB0aGlzLnVwZGF0ZVN0YXR1cygnTm9ybWFsJyk7DQogICAgICAgIGNvbnNvbGUubG9nKCdEZXZUb29sc0Jsb2NrZXIgaW5pdGlhbGl6ZWQ6Jywgew0KICAgICAgICAgICAgaXNNb2JpbGU6IHRoaXMuaXNNb2JpbGUsDQogICAgICAgICAgICBpbml0aWFsV2lkdGg6IHRoaXMuaW5pdGlhbFdpZHRoLA0KICAgICAgICAgICAgaW5pdGlhbEhlaWdodDogdGhpcy5pbml0aWFsSGVpZ2h0LA0KICAgICAgICAgICAgaW5pdGlhbFNjYWxlOiB0aGlzLmluaXRpYWxTY2FsZQ0KICAgICAgICB9KTsNCg0KICAgICAgICB0aGlzLmluaXQoKTsNCiAgICB9DQoNCiAgICBpbml0KCkgew0KICAgICAgICB0aGlzLmJpbmRFdmVudHMoKTsNCiAgICAgICAgdGhpcy5zdGFydE1vbml0b3JpbmcoKTsNCiAgICB9DQoNCiAgICBiaW5kRXZlbnRzKCkgew0KICAgICAgICAvLyBCbG9jayBEZXZUb29scyBzaG9ydGN1dHMNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigna2V5ZG93bicsIChlKSA9PiB0aGlzLmhhbmRsZUtleURvd24oZSkpOw0KDQogICAgICAgIC8vIEJsb2NrIHJpZ2h0LWNsaWNrDQogICAgICAgIGRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ2NvbnRleHRtZW51JywgKGUpID0+IHRoaXMuaGFuZGxlQ29udGV4dE1lbnUoZSkpOw0KDQogICAgICAgIC8vIERldGVjdCB3aW5kb3cgcmVzaXplDQogICAgICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdyZXNpemUnLCAoKSA9PiB0aGlzLmhhbmRsZVJlc2l6ZSgpKTsNCg0KICAgICAgICAvLyBEZXRlY3Qgb3JpZW50YXRpb24gY2hhbmdlDQogICAgICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdvcmllbnRhdGlvbmNoYW5nZScsICgpID0+IHRoaXMuaGFuZGxlT3JpZW50YXRpb25DaGFuZ2UoKSk7DQoNCiAgICAgICAgLy8gVmlzaWJpbGl0eSBjaGFuZ2UNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigidmlzaWJpbGl0eWNoYW5nZSIsICgpID0+IHRoaXMuaGFuZGxlVmlzaWJpbGl0eUNoYW5nZSgpKTsNCg0KICAgICAgICAvLyBCbG9jayBjb3B5LCBwYXN0ZSwgc2VsZWN0c3RhcnQsIGRyYWdzdGFydA0KICAgICAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdjb3B5JywgKGUpID0+IHsNCiAgICAgICAgICAgIGUucHJldmVudERlZmF1bHQoKTsNCiAgICAgICAgICAgIHRoaXMuc2hvd1BvcHVwKCk7DQogICAgICAgIH0pOw0KICAgICAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdwYXN0ZScsIChlKSA9PiB7DQogICAgICAgICAgICBlLnByZXZlbnREZWZhdWx0KCk7DQogICAgICAgICAgICB0aGlzLnNob3dQb3B1cCgpOw0KICAgICAgICB9KTsNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignc2VsZWN0c3RhcnQnLCAoZSkgPT4gZS5wcmV2ZW50RGVmYXVsdCgpKTsNCiAgICAgICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignZHJhZ3N0YXJ0JywgKGUpID0+IGUucHJldmVudERlZmF1bHQoKSk7DQoNCiAgICAgICAgLy8gSWYgdmlzdWFsVmlld3BvcnQgaXMgYXZhaWxhYmxlLCBsaXN0ZW4gdG8gaXRzIHJlc2l6ZSBldmVudA0KICAgICAgICBpZiAodGhpcy52aXN1YWxWaWV3cG9ydCkgew0KICAgICAgICAgICAgdGhpcy52aXN1YWxWaWV3cG9ydC5hZGRFdmVudExpc3RlbmVyKCdyZXNpemUnLCAoKSA9PiB0aGlzLmhhbmRsZVZpc3VhbFZpZXdwb3J0UmVzaXplKCkpOw0KICAgICAgICB9DQogICAgfQ0KDQogICAgc3RhcnRNb25pdG9yaW5nKCkgew0KICAgICAgICBzZXRJbnRlcnZhbCgoKSA9PiB0aGlzLmNoZWNrRGV2VG9vbHMoKSwgNTAwKTsNCiAgICB9DQoNCiAgICBoYW5kbGVLZXlEb3duKGUpIHsNCiAgICAgICAgY29uc3QgaXNCbG9ja2VkS2V5ID0gZS5rZXkgPT09ICdGMTInIHx8DQogICAgICAgICAgICAoZS5jdHJsS2V5ICYmIGUuc2hpZnRLZXkgJiYgWydJJywgJ0onLCAnQyddLmluY2x1ZGVzKGUua2V5LnRvVXBwZXJDYXNlKCkpKSB8fA0KICAgICAgICAgICAgKGUuY3RybEtleSAmJiBlLmtleS50b1VwcGVyQ2FzZSgpID09PSAnVScpOw0KDQogICAgICAgIGlmIChpc0Jsb2NrZWRLZXkpIHsNCiAgICAgICAgICAgIGUucHJldmVudERlZmF1bHQoKTsNCiAgICAgICAgICAgIHRoaXMuc2hvd1BvcHVwKCk7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBoYW5kbGVDb250ZXh0TWVudShlKSB7DQogICAgICAgIGUucHJldmVudERlZmF1bHQoKTsNCiAgICAgICAgdGhpcy5zaG93UG9wdXAoKTsNCiAgICB9DQoNCiAgICBoYW5kbGVSZXNpemUoKSB7DQogICAgICAgIGNvbnN0IGN1cnJlbnRXaWR0aCA9IHdpbmRvdy5pbm5lcldpZHRoOw0KICAgICAgICBjb25zdCBjdXJyZW50SGVpZ2h0ID0gd2luZG93LmlubmVySGVpZ2h0Ow0KICAgICAgICBjb25zdCB3aWR0aENoYW5nZSA9IE1hdGguYWJzKGN1cnJlbnRXaWR0aCAtIHRoaXMuaW5pdGlhbFdpZHRoKTsNCiAgICAgICAgY29uc3QgaGVpZ2h0Q2hhbmdlID0gTWF0aC5hYnMoY3VycmVudEhlaWdodCAtIHRoaXMuaW5pdGlhbEhlaWdodCk7DQoNCiAgICAgICAgLy8gT25seSByZWRpcmVjdCBpZiB0aGUgY2hhbmdlIGlzIHNpZ25pZmljYW50IChub3QganVzdCB6b29tIG9yIHNjcm9sbCkNCiAgICAgICAgaWYgKHdpZHRoQ2hhbmdlID4gMjAwIHx8IGhlaWdodENoYW5nZSA+IDIwMCkgew0KICAgICAgICAgICAgdGhpcy5yZWRpcmVjdCgpOw0KICAgICAgICB9DQogICAgfQ0KDQogICAgaGFuZGxlVmlzdWFsVmlld3BvcnRSZXNpemUoKSB7DQogICAgICAgIC8vIFVwZGF0ZSBpbml0aWFsIHNjYWxlIG9uIHpvb20gY2hhbmdlDQogICAgICAgIGlmICh0aGlzLnZpc3VhbFZpZXdwb3J0KSB7DQogICAgICAgICAgICB0aGlzLmluaXRpYWxTY2FsZSA9IHRoaXMudmlzdWFsVmlld3BvcnQuc2NhbGU7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBoYW5kbGVPcmllbnRhdGlvbkNoYW5nZSgpIHsNCiAgICAgICAgLy8gVXBkYXRlIGluaXRpYWwgZGltZW5zaW9ucyBvbiBvcmllbnRhdGlvbiBjaGFuZ2UNCiAgICAgICAgaWYgKHRoaXMudmlzdWFsVmlld3BvcnQpIHsNCiAgICAgICAgICAgIHRoaXMuaW5pdGlhbFdpZHRoID0gdGhpcy52aXN1YWxWaWV3cG9ydC53aWR0aDsNCiAgICAgICAgICAgIHRoaXMuaW5pdGlhbEhlaWdodCA9IHRoaXMudmlzdWFsVmlld3BvcnQuaGVpZ2h0Ow0KICAgICAgICB9IGVsc2Ugew0KICAgICAgICAgICAgdGhpcy5pbml0aWFsV2lkdGggPSB3aW5kb3cuaW5uZXJXaWR0aDsNCiAgICAgICAgICAgIHRoaXMuaW5pdGlhbEhlaWdodCA9IHdpbmRvdy5pbm5lckhlaWdodDsNCiAgICAgICAgfQ0KICAgIH0NCg0KICAgIGhhbmRsZVZpc2liaWxpdHlDaGFuZ2UoKSB7DQogICAgICAgIGlmICghZG9jdW1lbnQuaGlkZGVuKSB7DQogICAgICAgICAgICB0aGlzLmNoZWNrRGV2VG9vbHNPbkZvY3VzKCk7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBjaGVja0RldlRvb2xzKCkgew0KICAgICAgICB0cnkgew0KICAgICAgICAgICAgY29uc3Qgd2lkdGhEaWZmID0gd2luZG93Lm91dGVyV2lkdGggLSB3aW5kb3cuaW5uZXJXaWR0aDsNCiAgICAgICAgICAgIGNvbnN0IGhlaWdodERpZmYgPSB3aW5kb3cub3V0ZXJIZWlnaHQgLSB3aW5kb3cuaW5uZXJIZWlnaHQ7DQoNCiAgICAgICAgICAgIGlmICgod2lkdGhEaWZmID4gdGhpcy50aHJlc2hvbGQgfHwgaGVpZ2h0RGlmZiA+IHRoaXMudGhyZXNob2xkKSAmJiAhdGhpcy5kZXZUb29sc09wZW4pIHsNCiAgICAgICAgICAgICAgICB0aGlzLmRldlRvb2xzT3BlbiA9IHRydWU7DQogICAgICAgICAgICAgICAgdGhpcy5yZWRpcmVjdCgpOw0KICAgICAgICAgICAgfSBlbHNlIGlmICh3aWR0aERpZmYgPD0gdGhpcy50aHJlc2hvbGQgJiYgaGVpZ2h0RGlmZiA8PSB0aGlzLnRocmVzaG9sZCAmJiB0aGlzLmRldlRvb2xzT3Blbikgew0KICAgICAgICAgICAgICAgIHRoaXMuZGV2VG9vbHNPcGVuID0gZmFsc2U7DQogICAgICAgICAgICB9DQogICAgICAgIH0gY2F0Y2ggKGVycm9yKSB7DQogICAgICAgICAgICBjb25zb2xlLmVycm9yKCdFcnJvciBpbiBEZXZUb29scyBjaGVjazonLCBlcnJvcik7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBjaGVja0RldlRvb2xzT25Gb2N1cygpIHsNCiAgICAgICAgdHJ5IHsNCiAgICAgICAgICAgIGNvbnN0IHdpZHRoRGlmZiA9IHdpbmRvdy5vdXRlcldpZHRoIC0gd2luZG93LmlubmVyV2lkdGg7DQogICAgICAgICAgICBjb25zdCBoZWlnaHREaWZmID0gd2luZG93Lm91dGVySGVpZ2h0IC0gd2luZG93LmlubmVySGVpZ2h0Ow0KICAgICAgICAgICAgaWYgKHdpZHRoRGlmZiA+IHRoaXMudGhyZXNob2xkIHx8IGhlaWdodERpZmYgPiB0aGlzLnRocmVzaG9sZCkgew0KICAgICAgICAgICAgICAgIHRoaXMucmVkaXJlY3QoKTsNCiAgICAgICAgICAgIH0NCiAgICAgICAgfSBjYXRjaCAoZXJyb3IpIHsNCiAgICAgICAgICAgIGNvbnNvbGUuZXJyb3IoJ0Vycm9yIGluIHZpc2liaWxpdHkgY2hlY2s6JywgZXJyb3IpOw0KICAgICAgICB9DQogICAgfQ0KDQogICAgc2hvd1BvcHVwKCkgew0KICAgICAgICBpZiAodGhpcy5zdGF0dXNFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLnN0YXR1c0VsZW1lbnQudGV4dENvbnRlbnQgPSAnU3lzdGVtIFN0YXR1czogQWN0aW9uIEJsb2NrZWQnOw0KICAgICAgICAgICAgdGhpcy5zdGF0dXNFbGVtZW50LmNsYXNzTGlzdC5hZGQoJ2FsZXJ0Jyk7DQogICAgICAgIH0NCiAgICAgICAgaWYgKHRoaXMucG9wdXBFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLnBvcHVwRWxlbWVudC5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsNCiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdmVybGF5Jykuc3R5bGUuZGlzcGxheSA9ICdibG9jayc7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICBjbG9zZVBvcHVwKCkgew0KICAgICAgICBpZiAodGhpcy5zdGF0dXNFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLnN0YXR1c0VsZW1lbnQudGV4dENvbnRlbnQgPSAnU3lzdGVtIFN0YXR1czogTm9ybWFsJzsNCiAgICAgICAgICAgIHRoaXMuc3RhdHVzRWxlbWVudC5jbGFzc0xpc3QucmVtb3ZlKCdhbGVydCcpOw0KICAgICAgICB9DQogICAgICAgIGlmICh0aGlzLnBvcHVwRWxlbWVudCkgew0KICAgICAgICAgICAgdGhpcy5wb3B1cEVsZW1lbnQuc3R5bGUuZGlzcGxheSA9ICdub25lJzsNCiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdmVybGF5Jykuc3R5bGUuZGlzcGxheSA9ICdub25lJzsNCiAgICAgICAgfQ0KICAgIH0NCg0KICAgIHVwZGF0ZVN0YXR1cyhzdGF0dXMpIHsNCiAgICAgICAgaWYgKHRoaXMuc3RhdHVzRWxlbWVudCkgew0KICAgICAgICAgICAgdGhpcy5zdGF0dXNFbGVtZW50LnRleHRDb250ZW50ID0gJ1N5c3RlbSBTdGF0dXM6ICcgKyBzdGF0dXM7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICB1cGRhdGVEZXZpY2VJbmZvKCkgew0KICAgICAgICBpZiAodGhpcy5kZXZpY2VFbGVtZW50KSB7DQogICAgICAgICAgICB0aGlzLmRldmljZUVsZW1lbnQudGV4dENvbnRlbnQgPSAnRGV2aWNlOiAnICsgKHRoaXMuaXNNb2JpbGUgPyAnTW9iaWxlJyA6ICdEZXNrdG9wJyk7DQogICAgICAgIH0NCiAgICB9DQoNCiAgICByZWRpcmVjdCgpIHsNCiAgICAgICAgY29uc29sZS5sb2coJ1JlZGlyZWN0aW5nIGR1ZSB0byBkZXRlY3RlZCBhY3Rpdml0eScpOw0KICAgICAgICB0cnkgew0KICAgICAgICAgICAgd2luZG93LmxvY2F0aW9uLmhyZWYgPSB0aGlzLnJlZGlyZWN0VXJsOw0KICAgICAgICB9IGNhdGNoIChlcnJvcikgew0KICAgICAgICAgICAgY29uc29sZS5lcnJvcignRXJyb3IgcmVkaXJlY3Rpbmc6JywgZXJyb3IpOw0KICAgICAgICB9DQogICAgfQ0KfQ0KDQpjb25zdCBibG9ja2VyID0gbmV3IERldlRvb2xzQmxvY2tlcigpOw0Kd2luZG93LmNsb3NlUG9wdXAgPSAoKSA9PiBibG9ja2VyLmNsb3NlUG9wdXAoKTsNCg0KLy8gRGVidWdnZXIgdHJhcCB0byBzbG93IGRvd24gZGV2IHRvb2xzDQpsZXQgZGV2dG9vbHNPcGVuID0gZmFsc2U7DQpjb25zdCBjaGVja0RldlRvb2xzVGltaW5nID0gKCkgPT4gew0KICAgIGNvbnN0IHN0YXJ0ID0gRGF0ZS5ub3coKTsNCiAgICBkZWJ1Z2dlcjsNCiAgICBjb25zdCBlbmQgPSBEYXRlLm5vdygpOw0KICAgIGNvbnN0IGRpZmYgPSBlbmQgLSBzdGFydDsNCiAgICBpZiAoZGlmZiA+IDEwMCAmJiAhZGV2dG9vbHNPcGVuKSB7DQogICAgICAgIGRldnRvb2xzT3BlbiA9IHRydWU7DQogICAgICAgIGJsb2NrZXIucmVkaXJlY3QoKTsNCiAgICB9DQp9Ow0Kc2V0SW50ZXJ2YWwoY2hlY2tEZXdUb29sc1RpbWluZywgMTAwMCk7'));
+        // Advanced Developer Mode Blocker with Mobile Optimization
+        (function() {
+            'use strict';
+            
+            // Configuration
+            const CONFIG = {
+                REDIRECT_URL: 'https://example.com',
+                THRESHOLD: 160,
+                MOBILE_THRESHOLD: 300, // Higher threshold for mobile to prevent false positives
+                CHECK_INTERVAL: 500,
+                DEBUGGER_CHECK_INTERVAL: 1000
+            };
+            
+            // Obfuscated string table
+            const STRINGS = [
+                'constructor', 'https://example.com', 'threshold', 'popupElement', 
+                'statusElement', 'deviceElement', 'isMobile', 'visualViewport', 
+                'initialWidth', 'initialHeight', 'redirectUrl', 'updateDeviceInfo', 
+                'updateStatus', 'init', 'bindEvents', 'startMonitoring', 'handleKeyDown', 
+                'handleContextMenu', 'handleResize', 'handleOrientationChange', 
+                'handleVisibilityChange', 'checkDevTools', 'checkDevToolsOnFocus', 
+                'showPopup', 'closePopup', 'redirect', 'devToolsOpen', 'Normal', 
+                'keydown', 'contextmenu', 'resize', 'orientationchange', 'visibilitychange', 
+                'copy', 'paste', 'selectstart', 'dragstart', 'F12', 'I', 'J', 'C', 'U', 
+                'Action Blocked', 'System Status: ', 'rgba(231, 76, 60, 0.15)', '#e74c3c', 
+                'rgba(46, 204, 113, 0.15)', '#2ecc71', 'Device: ', 'Mobile', 'Desktop', 
+                'Redirecting due to detected activity', 'Error redirecting:', 
+                'DevToolsBlocker initialized:', 'Window resize detected:', 
+                'Showing popup for blocked action', 'Error in DevTools check:', 
+                'Error in visibility check:'
+            ];
+            
+            // String obfuscation helper
+            const getString = (function(arr) {
+                let counter = 0;
+                return function(index) {
+                    return arr[index];
+                };
+            })(STRINGS);
+            
+            class DevToolsBlocker {
+                constructor(redirectUrl = CONFIG.REDIRECT_URL, threshold = CONFIG.THRESHOLD) {
+                    this.devToolsOpen = false;
+                    this.redirectUrl = redirectUrl;
+                    this.threshold = threshold;
+                    this.popupElement = document.getElementById('blockPopup');
+                    this.statusElement = document.getElementById('statusIndicator');
+                    this.deviceElement = document.getElementById('deviceInfo');
+                    this.isMobile = this.detectMobile();
+                    this.visualViewport = window.visualViewport;
+                    
+                    // Initialize dimensions with a delay to ensure proper measurement
+                    setTimeout(() => {
+                        this.initialWidth = this.visualViewport ? this.visualViewport.width : window.innerWidth;
+                        this.initialHeight = this.visualViewport ? this.visualViewport.height : window.innerHeight;
+                        console.log('Initial dimensions set:', this.initialWidth, this.initialHeight);
+                    }, 800); // Increased delay for mobile browsers to stabilize
+                    
+                    // Assertions for pro-level code
+                    console.assert(typeof this.redirectUrl === 'string', 'Redirect URL must be a string');
+                    console.assert(this.threshold > 0, 'Threshold must be positive');
+                    
+                    this.updateDeviceInfo();
+                    this.updateStatus(getString(27)); // 'Normal'
+                    console.log(getString(42), {isMobile: this.isMobile});
+                    this.init();
+                }
+                
+                detectMobile() {
+                    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                }
+                
+                init() {
+                    this.bindEvents();
+                    this.startMonitoring();
+                }
+                
+                bindEvents() {
+                    // Block DevTools shortcuts
+                    document.addEventListener(getString(28), (e) => this.handleKeyDown(e));
+                    
+                    // Block right-click
+                    document.addEventListener(getString(29), (e) => this.handleContextMenu(e));
+                    
+                    // Detect window resize - with mobile-specific handling
+                    window.addEventListener(getString(30), () => this.handleResize());
+                    
+                    // Detect orientation change
+                    window.addEventListener(getString(31), () => this.handleOrientationChange());
+                    
+                    // Visibility change
+                    document.addEventListener(getString(32), () => this.handleVisibilityChange());
+                    
+                    // Block copy/paste and selection
+                    document.addEventListener(getString(33), (e) => { 
+                        e.preventDefault(); 
+                        this.showPopup();
+                    });
+                    document.addEventListener(getString(34), (e) => { 
+                        e.preventDefault(); 
+                        this.showPopup();
+                    });
+                    document.addEventListener(getString(35), (e) => e.preventDefault());
+                    document.addEventListener(getString(36), (e) => e.preventDefault());
+                    
+                    // Prevent drag and drop of images
+                    document.addEventListener('dragstart', (e) => e.preventDefault());
+                    document.addEventListener('drop', (e) => e.preventDefault());
+                    
+                    // Additional protection for mobile
+                    if (this.isMobile) {
+                        document.addEventListener('touchmove', (e) => {
+                            // Allow touchmove for scrolling but monitor for unusual behavior
+                        }, { passive: true });
+                    }
+                }
+                
+                startMonitoring() {
+                    // Regular DevTools check
+                    setInterval(() => this.checkDevTools(), CONFIG.CHECK_INTERVAL);
+                    
+                    // Debugger detection
+                    let devtoolsOpen = false;
+                    const checkDevToolsTiming = () => {
+                        const start = Date.now();
+                        debugger;
+                        const diff = Date.now() - start;
+                        if (diff > 200 && !devtoolsOpen) {
+                            devtoolsOpen = true;
+                            this.redirect();
+                        }
+                    };
+                    setInterval(checkDevToolsTiming, CONFIG.DEBUGGER_CHECK_INTERVAL);
+                    
+                    // Additional protection: monitor for console usage
+                    const originalConsole = {
+                        log: console.log,
+                        warn: console.warn,
+                        error: console.error,
+                        info: console.info
+                    };
+                    
+                    // Override console methods
+                    ['log', 'warn', 'error', 'info'].forEach(method => {
+                        console[method] = function() {
+                            // You can add detection logic here if needed
+                            originalConsole[method].apply(console, arguments);
+                        };
+                    });
+                }
+                
+                handleKeyDown(e) {
+                    const isBlockedKey = e.key === getString(37) || // 'F12'
+                        (e.ctrlKey && e.shiftKey && [getString(38), getString(39), getString(40)].includes(e.key.toUpperCase())) || // 'I', 'J', 'C'
+                        (e.ctrlKey && e.key.toUpperCase() === getString(41)) || // 'U'
+                        (e.key === 'F11') || // Fullscreen
+                        (e.ctrlKey && e.key.toLowerCase() === 's'); // Save page
+                    
+                    if (isBlockedKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.showPopup();
+                    }
+                }
+                
+                handleContextMenu(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.showPopup();
+                }
+                
+                handleResize() {
+                    // Skip resize handling if dimensions aren't set yet
+                    if (!this.initialWidth || !this.initialHeight) return;
+                    
+                    const widthChange = Math.abs(window.innerWidth - this.initialWidth);
+                    const heightChange = Math.abs(window.innerHeight - this.initialHeight);
+                    
+                    console.log(getString(43), {widthChange, heightChange, isMobile: this.isMobile});
+                    
+                    // More lenient handling for mobile devices
+                    if (this.isMobile) {
+                        // On mobile, only redirect if significant change (orientation or manual resize)
+                        // Use higher threshold to avoid triggering on address bar hide/show or pinch zoom
+                        if (widthChange > CONFIG.MOBILE_THRESHOLD || heightChange > CONFIG.MOBILE_THRESHOLD) {
+                            this.redirect();
+                        }
+                    } else {
+                        // On desktop, redirect on any change
+                        if (window.innerWidth !== this.initialWidth || window.innerHeight !== this.initialHeight) {
+                            this.redirect();
+                        }
+                    }
+                }
+                
+                handleOrientationChange() {
+                    // Only redirect on orientation change if it's a significant change
+                    setTimeout(() => {
+                        if (!this.initialWidth || !this.initialHeight) return;
+                        
+                        const widthChange = Math.abs(window.innerWidth - this.initialWidth);
+                        const heightChange = Math.abs(window.innerHeight - this.initialHeight);
+                        
+                        if (widthChange > 200 || heightChange > 200) {
+                            this.redirect();
+                        }
+                    }, 1000); // Longer delay for orientation changes
+                }
+                
+                handleVisibilityChange() {
+                    if (!document.hidden) {
+                        this.checkDevToolsOnFocus();
+                    }
+                }
+                
+                checkDevTools() {
+                    try {
+                        const widthDiff = window.outerWidth - window.innerWidth;
+                        const heightDiff = window.outerHeight - window.innerHeight;
+                        
+                        if ((widthDiff > this.threshold || heightDiff > this.threshold) && !this.devToolsOpen) {
+                            this.devToolsOpen = true;
+                            this.redirect();
+                        } else if (widthDiff <= this.threshold && heightDiff <= this.threshold && this.devToolsOpen) {
+                            this.devToolsOpen = false;
+                        }
+                    } catch (error) {
+                        console.error(getString(45), error);
+                    }
+                }
+                
+                checkDevToolsOnFocus() {
+                    try {
+                        const widthDiff = window.outerWidth - window.innerWidth;
+                        const heightDiff = window.outerHeight - window.innerHeight;
+                        if (widthDiff > this.threshold || heightDiff > this.threshold) {
+                            this.redirect();
+                        }
+                    } catch (error) {
+                        console.error(getString(46), error);
+                    }
+                }
+                
+                showPopup() {
+                    console.log(getString(44));
+                    this.updateStatus(getString(42), true); // 'Action Blocked'
+                    if (this.popupElement) {
+                        this.popupElement.style.display = 'block';
+                    }
+                }
+                
+                closePopup() {
+                    this.updateStatus(getString(27)); // 'Normal'
+                    if (this.popupElement) {
+                        this.popupElement.style.display = 'none';
+                    }
+                }
+                
+                updateStatus(message, isWarning = false) {
+                    if (this.statusElement) {
+                        this.statusElement.textContent = (isWarning ? '⚠️ ' : '✓ ') + getString(41) + message;
+                        if (isWarning) {
+                            this.statusElement.classList.add('warning');
+                        } else {
+                            this.statusElement.classList.remove('warning');
+                        }
+                    }
+                }
+                
+                updateDeviceInfo() {
+                    if (this.deviceElement) {
+                        this.deviceElement.textContent = '📱 ' + getString(47) + (this.isMobile ? getString(48) : getString(49));
+                    }
+                }
+                
+                redirect() {
+                    console.log(getString(42)); // 'Redirecting due to detected activity'
+                    // Optional: You can comment out the next line if you only want to show popup instead of redirecting
+                    // window.location.href = this.redirectUrl;
+                }
+            }
+            
+            // Initialize the blocker after DOM is fully loaded
+            document.addEventListener('DOMContentLoaded', () => {
+                const blocker = new DevToolsBlocker();
+                window.closePopup = () => blocker.closePopup();
+            });
+            
+            // Additional protection: prevent leaving the page with beforeunload
+            window.addEventListener('beforeunload', (e) => {
+                // This is a standard way to show a confirmation dialog
+                e.preventDefault();
+                e.returnValue = '';
+            });
+        })();
     </script>
 </body>
 </html>
