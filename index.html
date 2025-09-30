@@ -1166,6 +1166,17 @@
                         <div class="error-message" id="movieLinkError">Valid movie link is required</div>
                     </div>
 
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope label-icon"></i>
+                            Email Address
+                            <span class="required"></span>
+                        </label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="your.email@example.com" required>
+                        <p class="helper-text">We'll notify you when your movie request is processed</p>
+                        <div class="error-message" id="emailError">Valid email address is required</div>
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="movieCountry" class="form-label">
@@ -1574,6 +1585,19 @@
                 return false;
             }
         }
+
+        function validateEmail(field, errorElement) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!field.value.trim() || !emailRegex.test(field.value.trim())) {
+                field.classList.add('error');
+                errorElement.classList.add('show');
+                return false;
+            } else {
+                field.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+        }
         
         // Form validation and submission
         document.getElementById('movieRequestForm').addEventListener('submit', async function(e) {
@@ -1582,11 +1606,12 @@
             // Validate all required fields
             const isMovieNameValid = validateField(document.getElementById('movieName'), document.getElementById('movieNameError'));
             const isMovieLinkValid = validateURL(document.getElementById('movieLink'), document.getElementById('movieLinkError'));
+            const isEmailValid = validateEmail(document.getElementById('email'), document.getElementById('emailError'));
             const isLanguageValid = languageDropdown.validate();
             const isAvailabilityValid = availabilityDropdown.validate();
 
             // Check if all validations passed
-            if (isMovieNameValid && isMovieLinkValid && isLanguageValid && isAvailabilityValid) {
+            if (isMovieNameValid && isMovieLinkValid && isEmailValid && isLanguageValid && isAvailabilityValid) {
                 const submitBtn = document.getElementById('submitBtn');
                 const originalText = submitBtn.innerHTML;
 
@@ -1640,9 +1665,13 @@
         document.getElementById('movieName').addEventListener('input', function() {
             validateField(this, document.getElementById('movieNameError'));
         });
-        
+
         document.getElementById('movieLink').addEventListener('input', function() {
             validateURL(this, document.getElementById('movieLinkError'));
+        });
+
+        document.getElementById('email').addEventListener('input', function() {
+            validateEmail(this, document.getElementById('emailError'));
         });
         
         // Enhanced Movie Search Functionality
