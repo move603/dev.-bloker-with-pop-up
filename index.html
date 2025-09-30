@@ -1137,18 +1137,20 @@
                     <p class="form-subtitle">Help us grow our library by suggesting films you'd love to watch</p>
                 </div>
 
-                <form id="movieRequestForm" action="https://api.web3forms.com/submit" method="POST">
+                <form action="https://api.web3forms.com/submit" method="POST" id="movieRequestForm">
+                    <!-- Web3Forms Access Key (Replace with your own) -->
                     <input type="hidden" name="access_key" value="0c9d844d-d807-4661-9f5d-f0bb8d8d8418">
-                    <input type="hidden" name="redirect" value="https://example-homepage.com">
                     <input type="hidden" name="subject" value="New Movie Request Submission">
-
+                    <input type="hidden" name="from_name" value="CineRequest Portal">
+                    <input type="hidden" name="redirect" value="test3.html#thankyou">
+                    
                     <div class="form-group">
                         <label for="movieName" class="form-label">
                             <i class="fas fa-video label-icon"></i>
                             Movie Name
                             <span class="required"></span>
                         </label>
-                        <input type="text" id="movieName" name="Movie Name" class="form-control" placeholder="Enter the official movie title" required>
+                        <input type="text" id="movieName" name="movieName" class="form-control" placeholder="Enter the official movie title" required>
                         <p class="helper-text">Please provide the exact movie title for better search results</p>
                         <div class="error-message" id="movieNameError">Movie name is required</div>
                     </div>
@@ -1159,7 +1161,7 @@
                             Movie Link
                             <span class="required"></span>
                         </label>
-                        <input type="url" id="movieLink" name="Movie Link" class="form-control" placeholder="https://www.imdb.com/title/..." required>
+                        <input type="url" id="movieLink" name="movieLink" class="form-control" placeholder="https://www.imdb.com/title/..." required>
                         <p class="helper-text">Provide IMDb, TMDB, or Google link for verification</p>
                         <div class="error-message" id="movieLinkError">Valid movie link is required</div>
                     </div>
@@ -1170,7 +1172,7 @@
                                 <i class="fas fa-globe label-icon"></i>
                                 Movie Country
                             </label>
-                            <input type="text" id="movieCountry" name="Movie Country" class="form-control" placeholder="United States, India, etc.">
+                            <input type="text" id="movieCountry" name="movieCountry" class="form-control" placeholder="United States, India, etc.">
                             <p class="helper-text">Country of origin (optional)</p>
                         </div>
 
@@ -1224,7 +1226,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="hidden" id="preferredLanguageInput" name="Preferred Language" required>
+                            <input type="hidden" id="preferredLanguage" name="preferredLanguage" required>
                             <div class="error-message" id="languageError">Preferred language is required</div>
                             <p class="helper-text">Choose your preferred viewing language</p>
                         </div>
@@ -1236,7 +1238,7 @@
                                 <i class="fas fa-calendar label-icon"></i>
                                 Release Date
                             </label>
-                            <input type="date" id="releaseDate" name="Release Date" class="form-control">
+                            <input type="date" id="releaseDate" name="releaseDate" class="form-control">
                             <p class="helper-text">Original release date (optional)</p>
                         </div>
 
@@ -1294,7 +1296,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="hidden" id="availabilityInput" name="Current Availability" required>
+                            <input type="hidden" id="availability" name="availability" required>
                             <div class="error-message" id="availabilityError">Current availability is required</div>
                             <p class="helper-text">Select where the movie is currently available</p>
                         </div>
@@ -1409,7 +1411,7 @@
             constructor(triggerId, menuId, inputId, errorId) {
                 this.trigger = document.getElementById(triggerId);
                 this.menu = document.getElementById(menuId);
-                this.input = document.getElementById(inputId); // This is the hidden input for the actual value
+                this.input = document.getElementById(inputId);
                 this.errorElement = document.getElementById(errorId);
                 this.isOpen = false;
                 this.selectedValue = '';
@@ -1426,8 +1428,7 @@
                 this.menu.querySelectorAll('.dropdown-item').forEach(item => {
                     item.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const selectedItem = e.target.closest('.dropdown-item');
-                        this.select(selectedItem.dataset.value, selectedItem.querySelector('span').textContent);
+                        this.select(e.target.closest('.dropdown-item').dataset.value, e.target.closest('.dropdown-item').querySelector('span').textContent);
                     });
                 });
                 
@@ -1437,29 +1438,15 @@
                     }
                 });
                 
-                // Allow typing to filter (improved for better UX)
+                // Allow typing to filter
                 this.trigger.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         this.toggle();
-                    } else if (e.key === 'Escape') {
-                        this.close();
-                    } else if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        this.focusNextItem();
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        this.focusPrevItem();
+                    } else if (e.key.length === 1) {
+                        this.filterItems(e.key);
                     }
                 });
-
-                // Initial setup if there's a default value
-                if (this.input.value) {
-                    const defaultItem = this.menu.querySelector(`[data-value="${this.input.value}"]`);
-                    if (defaultItem) {
-                        this.select(defaultItem.dataset.value, defaultItem.querySelector('span').textContent, false); // Don't close on init
-                    }
-                }
             }
             
             toggle() {
@@ -1470,16 +1457,6 @@
                 this.menu.classList.add('show');
                 this.trigger.classList.add('active');
                 this.isOpen = true;
-                // Ensure menu is positioned correctly if it's near the bottom of the viewport
-                const rect = this.trigger.getBoundingClientRect();
-                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-                if (rect.bottom + this.menu.offsetHeight > viewportHeight) {
-                    this.menu.style.top = 'auto';
-                    this.menu.style.bottom = `calc(100% + 5px)`;
-                } else {
-                    this.menu.style.top = `calc(100% + 5px)`;
-                    this.menu.style.bottom = 'auto';
-                }
             }
             
             close() {
@@ -1488,7 +1465,7 @@
                 this.isOpen = false;
             }
             
-            select(value, text, shouldClose = true) {
+            select(value, text) {
                 this.selectedValue = value;
                 this.input.value = value;
                 this.trigger.querySelector('span').textContent = text;
@@ -1500,56 +1477,29 @@
                 // Update selected state
                 this.menu.querySelectorAll('.dropdown-item').forEach(item => {
                     item.classList.remove('selected');
-                    item.setAttribute('aria-selected', 'false');
                 });
-                const selectedMenuItem = this.menu.querySelector(`[data-value="${value}"]`);
-                if (selectedMenuItem) {
-                    selectedMenuItem.classList.add('selected');
-                    selectedMenuItem.setAttribute('aria-selected', 'true');
-                }
+                this.menu.querySelector(`[data-value="${value}"]`).classList.add('selected');
                 
-                if (shouldClose) {
-                    this.close();
-                }
+                this.close();
             }
             
-            // Removed filterItems as it's not a typical behavior for a select dropdown,
-            // and the current implementation doesn't have a text input for filtering.
-            // If a searchable dropdown is desired, a dedicated input field within the trigger
-            // or menu would be needed.
+            filterItems(char) {
+                const items = this.menu.querySelectorAll('.dropdown-item');
+                items.forEach(item => {
+                    if (item.textContent.toLowerCase().includes(char.toLowerCase())) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                this.open();
+            }
             
-            focusNextItem() {
-                const items = Array.from(this.menu.querySelectorAll('.dropdown-item:not([style*="display: none"])'));
-                if (items.length === 0) return;
-                
-                const focused = document.activeElement;
-                let nextIndex = 0;
-                if (focused && items.includes(focused)) {
-                    const currentIndex = items.indexOf(focused);
-                    nextIndex = (currentIndex + 1) % items.length;
-                }
-                items[nextIndex].focus();
-            }
-
-            focusPrevItem() {
-                const items = Array.from(this.menu.querySelectorAll('.dropdown-item:not([style*="display: none"])'));
-                if (items.length === 0) return;
-                
-                const focused = document.activeElement;
-                let prevIndex = items.length - 1;
-                if (focused && items.includes(focused)) {
-                    const currentIndex = items.indexOf(focused);
-                    prevIndex = (currentIndex - 1 + items.length) % items.length;
-                }
-                items[prevIndex].focus();
-            }
-
             // Error handling methods
             showError() {
                 this.trigger.classList.add('error');
                 if (this.errorElement) {
                     this.errorElement.classList.add('show');
-                    this.trigger.setAttribute('aria-invalid', 'true');
                 }
             }
             
@@ -1557,7 +1507,6 @@
                 this.trigger.classList.remove('error');
                 if (this.errorElement) {
                     this.errorElement.classList.remove('show');
-                    this.trigger.setAttribute('aria-invalid', 'false');
                 }
             }
             
@@ -1572,11 +1521,8 @@
         }
         
         // Initialize dropdowns
-        // Note: Changed inputId to 'preferredLanguageInput' and 'availabilityInput'
-        // to avoid conflict with the label 'for' attribute and to clearly distinguish
-        // the hidden input from the dropdown trigger.
-        const languageDropdown = new CustomDropdown('languageTrigger', 'languageMenu', 'preferredLanguageInput', 'languageError');
-        const availabilityDropdown = new CustomDropdown('availabilityTrigger', 'availabilityMenu', 'availabilityInput', 'availabilityError');
+        const languageDropdown = new CustomDropdown('languageTrigger', 'languageMenu', 'preferredLanguage', 'languageError');
+        const availabilityDropdown = new CustomDropdown('availabilityTrigger', 'availabilityMenu', 'availability', 'availabilityError');
         
         // Toast Notification System
         function showToast(title, text, type = 'success') {
@@ -1602,119 +1548,47 @@
             if (!field.value.trim()) {
                 field.classList.add('error');
                 errorElement.classList.add('show');
-                field.setAttribute('aria-invalid', 'true');
                 return false;
             } else {
                 field.classList.remove('error');
                 errorElement.classList.remove('show');
-                field.setAttribute('aria-invalid', 'false');
                 return true;
             }
         }
         
         function validateURL(field, errorElement) {
-            const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-            if (!field.value.trim() || !urlPattern.test(field.value)) {
+            const value = field.value.trim();
+            if (!value) {
                 field.classList.add('error');
                 errorElement.classList.add('show');
-                field.setAttribute('aria-invalid', 'true');
                 return false;
-            } else {
+            }
+            try {
+                new URL(value);
                 field.classList.remove('error');
                 errorElement.classList.remove('show');
-                field.setAttribute('aria-invalid', 'false');
                 return true;
+            } catch {
+                field.classList.add('error');
+                errorElement.classList.add('show');
+                return false;
             }
         }
         
         // Form validation and submission
-        document.getElementById('movieRequestForm').addEventListener('submit', async function(e) {
+        document.getElementById('movieRequestForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Validate all required fields
-            const movieNameInput = document.getElementById('movieName');
-            const movieLinkInput = document.getElementById('movieLink');
 
-            const isMovieNameValid = validateField(movieNameInput, document.getElementById('movieNameError'));
-            const isMovieLinkValid = validateURL(movieLinkInput, document.getElementById('movieLinkError'));
+            // Validate all required fields
+            const isMovieNameValid = validateField(document.getElementById('movieName'), document.getElementById('movieNameError'));
+            const isMovieLinkValid = validateURL(document.getElementById('movieLink'), document.getElementById('movieLinkError'));
             const isLanguageValid = languageDropdown.validate();
             const isAvailabilityValid = availabilityDropdown.validate();
-            
+
             // Check if all validations passed
             if (isMovieNameValid && isMovieLinkValid && isLanguageValid && isAvailabilityValid) {
-                const form = e.target;
-                const submitBtn = document.getElementById('submitBtn');
-                const originalText = submitBtn.innerHTML;
-                const redirectUrl = form.querySelector('input[name="redirect"]').value; // Get redirect URL from hidden input
-                
-                // Show loading state
-                submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
-                submitBtn.disabled = true;
-                
-                try {
-                    const formData = new FormData(form);
-                    const response = await fetch(form.action, {
-                        method: form.method,
-                        body: formData,
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    const result = await response.json();
-
-                    if (response.ok && result.success) {
-                        // Show success modal
-                        const modal = document.getElementById('thankYouModal');
-                        modal.classList.add('show');
-                        
-                        // Countdown timer
-                        let countdown = 3;
-                        const countdownEl = document.getElementById('countdown');
-                        countdownEl.textContent = countdown; // Initialize countdown display
-                        const timer = setInterval(() => {
-                            countdown--;
-                            countdownEl.textContent = countdown;
-                            if (countdown <= 0) {
-                                clearInterval(timer);
-                                // Reset form
-                                form.reset();
-                                // Reset dropdowns
-                                languageDropdown.trigger.querySelector('span').textContent = 'Select language';
-                                languageDropdown.trigger.classList.remove('has-value');
-                                languageDropdown.selectedValue = '';
-                                languageDropdown.clearError(); // Clear any lingering error state
-                                languageDropdown.menu.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('selected'));
-
-                                availabilityDropdown.trigger.querySelector('span').textContent = 'Where is it available?';
-                                availabilityDropdown.trigger.classList.remove('has-value');
-                                availabilityDropdown.selectedValue = '';
-                                availabilityDropdown.clearError(); // Clear any lingering error state
-                                availabilityDropdown.menu.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('selected'));
-                                
-                                // Close modal
-                                modal.classList.remove('show');
-                                
-                                // Redirect after modal closes
-                                window.location.href = redirectUrl;
-                            }
-                        }, 1000);
-                    } else {
-                        console.error('Web3Forms submission error:', result);
-                        showToast('Error', result.message || 'Failed to submit form. Please try again.', 'error');
-                        
-                        // Reset button
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }
-                } catch (error) {
-                    console.error('Form submission network error:', error);
-                    showToast('Error', 'Network error. Please check your connection and try again.', 'error');
-                    
-                    // Reset button
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
+                // Submit the form normally to Web3Forms
+                this.submit();
             } else {
                 showToast('Validation Error', 'Please fill in all required fields correctly', 'error');
             }
@@ -2070,6 +1944,35 @@
                     }
                 });
             });
+
+            // Check for thank you hash on page load
+            if (window.location.hash === '#thankyou') {
+                document.getElementById('thankYouModal').classList.add('show');
+
+                // Countdown timer
+                let countdown = 3;
+                const countdownEl = document.getElementById('countdown');
+                const timer = setInterval(() => {
+                    countdown--;
+                    countdownEl.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        // Reset form
+                        document.getElementById('movieRequestForm').reset();
+                        // Reset dropdowns
+                        languageDropdown.trigger.querySelector('span').textContent = 'Select language';
+                        languageDropdown.trigger.classList.remove('has-value');
+                        languageDropdown.selectedValue = '';
+                        availabilityDropdown.trigger.querySelector('span').textContent = 'Where is it available?';
+                        availabilityDropdown.trigger.classList.remove('has-value');
+                        availabilityDropdown.selectedValue = '';
+                        // Close modal
+                        document.getElementById('thankYouModal').classList.remove('show');
+                        // Remove hash
+                        history.replaceState(null, null, ' ');
+                    }
+                }, 1000);
+            }
         });
     </script>
 </body>
