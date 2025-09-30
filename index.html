@@ -1142,7 +1142,7 @@
                     <input type="hidden" name="access_key" value="0c9d844d-d807-4661-9f5d-f0bb8d8d8418">
                     <input type="hidden" name="subject" value="New Movie Request Submission">
                     <input type="hidden" name="from_name" value="CineRequest Portal">
-                    <input type="hidden" name="redirect" value="test3.html#thankyou">
+
                     
                     <div class="form-group">
                         <label for="movieName" class="form-label">
@@ -1576,7 +1576,7 @@
         }
         
         // Form validation and submission
-        document.getElementById('movieRequestForm').addEventListener('submit', function(e) {
+        document.getElementById('movieRequestForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             // Validate all required fields
@@ -1587,8 +1587,50 @@
 
             // Check if all validations passed
             if (isMovieNameValid && isMovieLinkValid && isLanguageValid && isAvailabilityValid) {
-                // Submit the form normally to Web3Forms
-                this.submit();
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.innerHTML;
+
+                // Show loading state
+                submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
+                submitBtn.disabled = true;
+
+                try {
+                    const formData = new FormData(this);
+
+                    const response = await fetch('https://api.web3forms.com/submit', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Show success modal
+                        document.getElementById('thankYouModal').classList.add('show');
+
+                        // Countdown timer
+                        let countdown = 3;
+                        const countdownEl = document.getElementById('countdown');
+                        const timer = setInterval(() => {
+                            countdown--;
+                            countdownEl.textContent = countdown;
+                            if (countdown <= 0) {
+                                clearInterval(timer);
+                                // Redirect to YouTube
+                                window.location.href = 'https://www.youtube.com/';
+                            }
+                        }, 1000);
+                    } else {
+                        throw new Error('Submission failed');
+                    }
+                } catch (error) {
+                    console.error('Form submission error:', error);
+                    showToast('Error', 'Failed to submit form. Please try again.', 'error');
+
+                    // Reset button
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             } else {
                 showToast('Validation Error', 'Please fill in all required fields correctly', 'error');
             }
@@ -1945,34 +1987,7 @@
                 });
             });
 
-            // Check for thank you hash on page load
-            if (window.location.hash === '#thankyou') {
-                document.getElementById('thankYouModal').classList.add('show');
 
-                // Countdown timer
-                let countdown = 3;
-                const countdownEl = document.getElementById('countdown');
-                const timer = setInterval(() => {
-                    countdown--;
-                    countdownEl.textContent = countdown;
-                    if (countdown <= 0) {
-                        clearInterval(timer);
-                        // Reset form
-                        document.getElementById('movieRequestForm').reset();
-                        // Reset dropdowns
-                        languageDropdown.trigger.querySelector('span').textContent = 'Select language';
-                        languageDropdown.trigger.classList.remove('has-value');
-                        languageDropdown.selectedValue = '';
-                        availabilityDropdown.trigger.querySelector('span').textContent = 'Where is it available?';
-                        availabilityDropdown.trigger.classList.remove('has-value');
-                        availabilityDropdown.selectedValue = '';
-                        // Close modal
-                        document.getElementById('thankYouModal').classList.remove('show');
-                        // Remove hash
-                        history.replaceState(null, null, ' ');
-                    }
-                }, 1000);
-            }
         });
     </script>
 </body>
